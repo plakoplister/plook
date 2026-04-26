@@ -2,33 +2,27 @@
 {% block title %}Plook — Auteurs{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <h1>auteurs</h1>
-  <p class="subtitle">{{ (followed|length) + (others|length) }} auteurs dans ta collection</p>
-</div>
+<div class="page-title">plook</div>
+<h1 class="page-heading">auteurs</h1>
 
 {% if followed %}
 <div class="section">
-  <div class="section-header">
-    <div class="section-label">auteurs suivis</div>
-    <span class="section-count">{{ followed|length }}</span>
-  </div>
-  <div class="authors-grid authors-grid-rich">
+  <div class="section-label">auteurs suivis <span class="section-count">{{ followed|length }}</span></div>
+  <div class="authors-grid">
     {% for a in followed %}
-    <a href="/auteur/{{ a.id }}" class="author-card author-card-followed">
-      <div class="author-card-top">
-        {% if a.photo_url %}
-        <img src="{{ a.photo_url }}" alt="{{ a.name }}" class="author-photo" loading="lazy">
-        {% else %}
-        <div class="author-avatar-lg">{{ a.name[0] }}</div>
-        {% endif %}
-        <span class="badge badge-followed">suivi</span>
-      </div>
-      <div class="author-card-body">
-        <div class="author-card-name">{{ a.name }}</div>
-        <div class="author-card-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+    <a href="/auteur/{{ a.id }}" class="author-card" style="animation-delay: {{ loop.index0 * 0.08 }}s">
+      {% if a.photo_url %}
+      <div class="card-bg"><img src="{{ a.photo_url }}" alt="{{ a.name }}" class="card-photo" loading="lazy"></div>
+      {% else %}
+      <div class="card-bg card-bg-gradient"><span class="card-initial">{{ a.name[0] }}</span></div>
+      {% endif %}
+      <div class="card-overlay"></div>
+      <span class="card-badge">suivi</span>
+      <div class="card-content">
+        <div class="card-name">{{ a.name }}</div>
+        <div class="card-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
         {% if a.bio %}
-        <p class="author-card-bio">{{ a.bio[:120] }}{% if a.bio|length > 120 %}...{% endif %}</p>
+        <div class="card-bio">{{ a.bio[:140] }}{% if a.bio|length > 140 %}...{% endif %}</div>
         {% endif %}
       </div>
     </a>
@@ -39,36 +33,26 @@
 
 {% if others %}
 <div class="section">
-  <div class="section-header">
-    <div class="section-label">tous les auteurs</div>
-    <span class="section-count">{{ others|length }}</span>
-  </div>
-  <div class="authors-grid authors-grid-rich">
+  <div class="section-label">tous les auteurs <span class="section-count">{{ others|length }}</span></div>
+  <div class="authors-grid">
     {% for a in others %}
     <a href="/auteur/{{ a.id }}" class="author-card">
-      <div class="author-card-top">
-        {% if a.photo_url %}
-        <img src="{{ a.photo_url }}" alt="{{ a.name }}" class="author-photo" loading="lazy">
-        {% else %}
-        <div class="author-avatar-lg">{{ a.name[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="author-card-body">
-        <div class="author-card-name">{{ a.name }}</div>
-        <div class="author-card-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+      {% if a.photo_url %}
+      <div class="card-bg"><img src="{{ a.photo_url }}" alt="{{ a.name }}" class="card-photo" loading="lazy"></div>
+      {% else %}
+      <div class="card-bg card-bg-gradient"><span class="card-initial">{{ a.name[0] }}</span></div>
+      {% endif %}
+      <div class="card-overlay"></div>
+      <div class="card-content">
+        <div class="card-name">{{ a.name }}</div>
+        <div class="card-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
         {% if a.bio %}
-        <p class="author-card-bio">{{ a.bio[:120] }}{% if a.bio|length > 120 %}...{% endif %}</p>
+        <div class="card-bio">{{ a.bio[:140] }}{% if a.bio|length > 140 %}...{% endif %}</div>
         {% endif %}
       </div>
     </a>
     {% endfor %}
   </div>
-</div>
-{% endif %}
-
-{% if not followed and not others %}
-<div class="empty">
-  Aucun auteur dans la collection.
 </div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,32 @@
+{% if results %}
+<div class="search-results-list">
+  {% for r in results %}
+  <div class="search-result-item">
+    <div class="search-result-cover">
+      {% if r.cover_url %}
+      <img src="{{ r.cover_url }}" alt="{{ r.title }}" loading="lazy">
+      {% else %}
+      <div class="search-placeholder">{{ r.title[0] if r.title else '?' }}</div>
+      {% endif %}
+    </div>
+    <div class="search-result-info">
+      <div class="search-result-title">{{ r.title }}</div>
+      <div class="search-result-author">{{ r.authors|join(', ') if r.authors else '' }}</div>
+      {% if r.categories %}
+      <div class="search-result-genre">{{ r.categories|join(', ') }}</div>
+      {% endif %}
+    </div>
+    <form hx-post="/search/add" hx-swap="outerHTML" hx-target="closest .search-result-item">
+      <input type="hidden" name="google_books_id" value="{{ r.google_books_id }}">
+      <input type="hidden" name="title" value="{{ r.title }}">
+      <input type="hidden" name="author" value="{{ r.authors[0] if r.authors else '' }}">
+      <input type="hidden" name="cover_url" value="{{ r.cover_url or '' }}">
+      <input type="hidden" name="synopsis" value="{{ r.synopsis or '' }}">
+      <input type="hidden" name="page_count" value="{{ r.page_count or '' }}">
+      <input type="hidden" name="isbn" value="{{ r.isbn or '' }}">
+      <button type="submit" class="btn btn-sm">+ ajouter</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

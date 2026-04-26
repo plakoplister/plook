@@ -3,117 +3,90 @@
 
 {% block content %}
 
-<div class="home-hero">
-  <h1>plook</h1>
-  <p class="subtitle">tes livres, tes coups de coeur</p>
-  {% if total_books %}
-  <span class="home-stat">{{ total_books }} livres dans ta collection</span>
-  {% endif %}
-</div>
-
-<!-- En cours de lecture -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-label">en cours de lecture</div>
-    {% if reading_now %}
-    <span class="section-count">{{ reading_now|length }}</span>
+<!-- Split Hero -->
+<div class="split-hero">
+  <div class="split-left">
+    {% if reading_now and reading_now|length > 0 %}
+    {% set book = reading_now[0] %}
+    <div class="split-label">en cours de lecture</div>
+    <div class="split-title">{{ book.title }}</div>
+    <div class="split-author">{{ book.author_name or '' }}</div>
+    <div class="split-bar"><div class="split-fill" style="width:{{ book.reading_progress }}%"></div></div>
+    <div class="split-pct">{{ book.reading_progress }}%</div>
+    {% else %}
+    <div class="split-label">bienvenue</div>
+    <div class="split-title">plook</div>
+    <div class="split-author">tes livres, tes coups de coeur</div>
+    {% endif %}
+    <div class="split-stats">
+      <div class="split-stat"><div class="split-stat-val">{{ total_books or 0 }}</div><div class="split-stat-lbl">lus</div></div>
+      <div class="split-stat"><div class="split-stat-val">{{ followed_count or 0 }}</div><div class="split-stat-lbl">suivis</div></div>
+      <div class="split-stat"><div class="split-stat-val">{{ pal_count or 0 }}</div><div class="split-stat-lbl">PAL</div></div>
+    </div>
+  </div>
+  <div class="split-right">
+    <div class="section-label">actualites</div>
+    {% if author_releases %}
+    {% for book in author_releases[:3] %}
+    <div class="split-news-item">
+      <div class="split-news-source">{{ book.author_name }}</div>
+      <div class="split-news-title">{{ book.title }}</div>
+      <div class="split-news-date">{{ book.year or '' }}</div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="placeholder-section">Suis des auteurs pour voir leurs sorties ici.</div>
     {% endif %}
   </div>
-  {% if reading_now %}
-  <div class="reading-grid">
-    {% for book in reading_now %}
-    <a href="/livre/{{ book.id }}" class="reading-card">
-      <div class="reading-cover">
-        {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
-        {% else %}
-        <div class="reading-cover-placeholder">{{ book.title[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="reading-info">
-        <div class="reading-title">{{ book.title }}</div>
-        <div class="reading-author">{{ book.author_name or '' }}</div>
-        <div class="pal-progress">
-          <div class="pal-progress-bar">
-            <div class="pal-progress-fill" style="width: {{ book.reading_progress }}%"></div>
-          </div>
-          <span class="pal-progress-label">{{ book.reading_progress }}%{% if book.page_count %} -- {{ (book.page_count * book.reading_progress / 100)|int }}/{{ book.page_count }} p.{% endif %}</span>
-        </div>
-      </div>
-    </a>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="placeholder-section">
-    Rien en cours -- ouvre un livre et lance-toi.
-  </div>
-  {% endif %}
 </div>
 
-<!-- Dernieres sorties de tes auteurs -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-label">sorties de tes auteurs</div>
-  </div>
-  {% if author_releases %}
-  <div class="reading-grid">
-    {% for book in author_releases %}
-    <a href="/livre/{{ book.id }}" class="reading-card">
-      <div class="reading-cover">
-        {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
-        {% else %}
-        <div class="reading-cover-placeholder">{{ book.title[0] }}</div>
-        {% endif %}
+<!-- Bottom grid -->
+<div class="bottom-grid">
+  <!-- Sorties a venir -->
+  <div class="sorties-card">
+    <div class="section-label">sorties a venir</div>
+    {% if upcoming %}
+    {% for book in upcoming %}
+    <div class="sortie-row">
+      <div class="sortie-dot"></div>
+      <div class="sortie-info">
+        <div class="sortie-title">{{ book.title }}</div>
+        <div class="sortie-author">{{ book.author_name }}</div>
       </div>
-      <div class="reading-info">
-        <div class="reading-title">{{ book.title }}</div>
-        <div class="reading-author">{{ book.author_name or '' }}</div>
-        {% if book.year %}
-        <div class="reading-year">{{ book.year }}</div>
-        {% endif %}
-      </div>
-    </a>
+      <div class="sortie-date">{{ book.year or 'bientot' }}</div>
+    </div>
     {% endfor %}
+    {% else %}
+    <div class="placeholder-section">Aucune sortie annoncee.</div>
+    {% endif %}
   </div>
-  {% else %}
-  <div class="placeholder-section">
-    Aucune sortie recente -- suis des auteurs pour voir leurs nouveautes ici.
-  </div>
-  {% endif %}
-</div>
 
-<!-- Plook recommande -->
-<div class="section">
-  <div class="section-header">
+  <!-- Plook recommande -->
+  <div class="recos-card">
     <div class="section-label">plook recommande</div>
-  </div>
-  {% if recommendations %}
-  <div class="library-grid">
-    {% for book in recommendations %}
-    <a href="/livre/{{ book.id }}" class="library-card">
-      <div class="library-poster">
-        {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
-        {% else %}
-        <div class="library-poster-placeholder">
-          <span class="placeholder-title">{{ book.title }}</span>
-          <span class="placeholder-author">{{ book.author_name or '' }}</span>
+    {% if recommendations %}
+    <div class="reco-row">
+      {% for reco in recommendations %}
+      <div class="reco-card">
+        <div class="reco-cover">
+          {% if reco.cover_url %}
+          <img src="{{ reco.cover_url }}" alt="{{ reco.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+          {% else %}
+          <div class="reco-cover-inner">{{ reco.title }}</div>
+          {% endif %}
         </div>
+        <div class="reco-title">{{ reco.title }}</div>
+        <div class="reco-author">{{ reco.author }}</div>
+        {% if reco.why %}
+        <div class="reco-why">"{{ reco.why }}"</div>
         {% endif %}
       </div>
-      <div class="library-info">
-        <div class="library-title">{{ book.title }}</div>
-        <div class="library-author">{{ book.author_name or '' }}</div>
-      </div>
-    </a>
-    {% endfor %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="placeholder-section">Les recommandations arrivent bientot.</div>
+    {% endif %}
   </div>
-  {% else %}
-  <div class="placeholder-section">
-    Les recommandations arrivent bientot.
-  </div>
-  {% endif %}
 </div>
 
 {% endblock %}

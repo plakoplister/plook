@@ -1,11 +1,13 @@
-"""Flask app for Plook (books) — mounted at /plook via WSGI dispatcher."""
+"""Flask app for Plook (books)."""
 
+from datetime import date
 from pathlib import Path
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 from plook.database import init_db, SessionLocal
 from plook.models import Book, Author, ReadingListItem, Alert, Dislike
+from plook.recommender import get_recommendations
 
 BASE_DIR = Path(__file__).parent / "plook"
 
@@ -29,14 +31,15 @@ def get_db():
 def home():
     db = get_db()
     try:
-        # En cours de lecture: progress > 0 et pas fini
         reading_now = (
             db.query(Book)
             .filter(Book.reading_progress > 0, Book.is_read == False)
             .order_by(Book.reading_progress.desc())
             .all()
         )
-        # Dernieres sorties des auteurs suivis
+
+        # Sorties recentes : auteurs suivis, annee >= annee en cours
+        current_year = date.today().year
         followed_ids = [
             a.id for a in db.query(Author).filter(Author.is_followed == True).all()
         ]
@@ -44,20 +47,40 @@ def home():
         if followed_ids:
             author_releases = (
                 db.query(Book)
-                .filter(Book.author_id.in_(followed_ids))
+                .filter(
+                    Book.author_id.in_(followed_ids),
+                    Book.year >= current_year - 1,
+                )
                 .order_by(Book.year.desc(), Book.added_at.desc())
-                .limit(8)
+                .limit(6)
                 .all()
             )
-        # Nombre total de livres
-        total_books = db.query(Book).count()
+
+        # Livres non lus dans la PAL
+        upcoming = (
+            db.query(Book)
+            .filter(Book.is_read == False, Book.year >= current_year)
+            .order_by(Book.year.desc())
+            .limit(5)
+            .all()
+        )
+
+        total_books = db.query(Book).filter(Book.is_read == True).count()
+        followed_count = db.query(Author).filter(Author.is_followed == True).count()
+        pal_count = db.query(ReadingListItem).count()
+
+        recommendations = get_recommendations(db, limit=4)
+
         return render_template(
             "home.html",
             request=request,
             reading_now=reading_now,
             author_releases=author_releases,
-            recommendations=[],
+            upcoming=upcoming,
+            recommendations=recommendations,
             total_books=total_books,
+            followed_count=followed_count,
+            pal_count=pal_count,
         )
     finally:
         db.close()
@@ -67,11 +90,7 @@ def home():
 def bibliotheque():
     db = get_db()
     try:
-        books = (
-            db.query(Book)
-            .order_by(Book.author_name, Book.title)
-            .all()
-        )
+        books = db.query(Book).order_by(Book.author_name, Book.title).all()
         return render_template("bibliotheque.html", request=request, books=books)
     finally:
         db.close()
@@ -83,8 +102,8 @@ def livre_detail(book_id):
     try:
         book = db.query(Book).get(book_id)
         if not book:
-            return redirect(url_for("home"))
-        return render_template("livre.html", request=request, book=book)
+            return redirect("/")
+        return render_template("livre.html", request=request, book=book, book_id=book_id)
     finally:
         db.close()
 
@@ -123,13 +142,8 @@ def auteur_detail(author_id):
     try:
         author = db.query(Author).get(author_id)
         if not author:
-            return redirect(url_for("home"))
-        books = (
-            db.query(Book)
-            .filter(Book.author_id == author_id)
-            .order_by(Book.year.desc())
-            .all()
-        )
+            return redirect("/")
+        books = db.query(Book).filter(Book.author_id == author_id).order_by(Book.year.desc()).all()
         return render_template("auteur.html", request=request, author=author, books=books)
     finally:
         db.close()
@@ -140,7 +154,7 @@ def health():
     return {"status": "ok", "app": "plook"}
 
 
-# ==================== HTMX stubs ====================
+# ==================== HTMX endpoints ====================
 
 @plook_app.route("/livre/<int:book_id>/rate", methods=["POST"])
 def rate_book(book_id):
@@ -188,9 +202,7 @@ def pal_add():
     db = get_db()
     try:
         book_id = int(request.form.get("book_id", 0))
-        existing = db.query(ReadingListItem).filter(
-            ReadingListItem.book_id == book_id
-        ).first()
+        existing = db.query(ReadingListItem).filter(ReadingListItem.book_id == book_id).first()
         if not existing:
             db.add(ReadingListItem(book_id=book_id))
             db.commit()
@@ -219,16 +231,66 @@ def toggle_follow(author_id):
         db.close()
 
 
-@plook_app.route("/search/books", methods=["POST"])
-def search_books():
-    """Google Books search — stub for now."""
-    return ""
+@plook_app.route("/search/books", methods=["GET"])
+def search_books_route():
+    q = request.args.get("q", "").strip()
+    if not q or len(q) < 2:
+        return ""
+    try:
+        from plook.books_api import search_books
+        results = search_books(q, max_results=6)
+        return render_template("partials/search_results.html", request=request, results=results)
+    except Exception:
+        return '<div class="placeholder-section">Erreur de recherche.</div>'
 
 
 @plook_app.route("/search/add", methods=["POST"])
 def search_add():
-    """Add book from search results — stub for now."""
-    return ""
+    db = get_db()
+    try:
+        google_books_id = request.form.get("google_books_id", "")
+        title = request.form.get("title", "")
+        author = request.form.get("author", "")
+        cover_url = request.form.get("cover_url", "") or None
+        synopsis = request.form.get("synopsis", "") or None
+        page_count = request.form.get("page_count", "")
+        isbn = request.form.get("isbn", "") or None
+
+        # Check if already exists
+        existing = None
+        if google_books_id:
+            existing = db.query(Book).filter(Book.google_books_id == google_books_id).first()
+        if not existing and title:
+            existing = db.query(Book).filter(Book.title == title).first()
+
+        if existing:
+            return f'<div class="tag">Deja dans ta collection</div>'
+
+        # Find or create author
+        author_obj = None
+        if author:
+            author_obj = db.query(Author).filter(Author.name == author).first()
+            if not author_obj:
+                author_obj = Author(name=author)
+                db.add(author_obj)
+                db.flush()
+
+        book = Book(
+            title=title,
+            author_name=author,
+            author_id=author_obj.id if author_obj else None,
+            google_books_id=google_books_id or None,
+            cover_url=cover_url,
+            synopsis=synopsis,
+            page_count=int(page_count) if page_count and page_count.isdigit() else None,
+            isbn=isbn,
+            is_read=False,
+        )
+        db.add(book)
+        db.commit()
+        return f'<div class="tag">"{title}" ajoute</div>'
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":
