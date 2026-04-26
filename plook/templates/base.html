@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Plook{% endblock %}</title>
-  <link rel="icon" type="image/png" href="/plook/static/favicon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/plook/static/plook-favicon-64.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/plook/static/plook-favicon-32.png">
   <link rel="stylesheet" href="/plook/static/plook-style.css">
   <meta name="view-transition" content="same-origin">
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
@@ -12,7 +13,7 @@
 <body>
   <nav class="navbar" role="navigation" aria-label="navigation principale">
     <a href="/plook" class="logo" aria-label="Plook accueil">
-      <img src="/plook/static/logo.png" alt="Plook" class="logo-img">
+      <img src="/plook/static/plook-logo-navbar.png" alt="Plook" class="logo-img" height="80">
     </a>
     <ul class="nav-links">
       <li><a href="/plook" {% if request.url.path == "/plook" or request.url.path == "/plook/" %}class="active"{% endif %}>accueil</a></li>
@@ -28,6 +29,7 @@
 
   <footer class="site-footer">
     <div class="footer-content">
+      <img src="/plook/static/plook-icone.png" alt="Plook" class="footer-icon" height="32">
       <span class="footer-text">plook -- tes livres, tes coups de coeur</span>
     </div>
   </footer>

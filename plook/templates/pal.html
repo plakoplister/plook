@@ -3,11 +3,11 @@
 
 {% block content %}
 <h1>pile a lire</h1>
-<p class="subtitle">{{ pal_books|length }} livres en attente</p>
+<p class="subtitle">{{ items|length }} livres en attente</p>
 
-{% if pal_books %}
+{% if items %}
 <div class="pal-list">
-  {% for item in pal_books %}
+  {% for item in items %}
   <a href="/plook/livre/{{ item.book.id }}" class="pal-item">
     <div class="pal-cover">
       {% if item.book.cover_url %}
