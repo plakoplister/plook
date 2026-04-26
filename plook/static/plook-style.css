@@ -1789,3 +1789,86 @@ h2 {
 .bottom-grid {
   display: none !important;
 }
+
+/* ========== MARGINS + COLOR CONSISTENCY ========== */
+
+/* Container: more padding */
+.container {
+  padding: 0 32px !important;
+}
+
+/* Page padding top */
+.page {
+  padding: 32px 0 80px !important;
+}
+
+/* Library grid: more gap between cards */
+.library-grid {
+  gap: 28px 22px !important;
+  padding: 0 4px;
+}
+
+/* Library info under cards: more breathing room */
+.library-info {
+  padding: 10px 4px 0 !important;
+}
+
+/* Sections: more margin between */
+.section {
+  margin-bottom: 40px !important;
+}
+
+/* Section label: consistent everywhere */
+.section-label {
+  color: var(--encre-sepia) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  margin-bottom: 16px !important;
+}
+
+/* All card backgrounds: WHITE on parchemin page */
+.split-right,
+.sorties-card,
+.recos-card,
+.reading-card,
+.pal-item,
+.card,
+.book-detail,
+.author-detail-header {
+  background: #FFFFFF !important;
+}
+
+/* Body background: parchemin everywhere */
+body {
+  background: var(--parchemin) !important;
+}
+
+/* Nav background: parchemin */
+.navbar {
+  padding: 20px 32px !important;
+}
+
+/* Page heading: consistent */
+.page-heading {
+  margin-bottom: 28px !important;
+}
+
+/* Author grid: same gap as library */
+.authors-grid {
+  gap: 28px 22px !important;
+}
+
+/* Split hero: more padding */
+.split-left {
+  padding: 40px !important;
+}
+.split-right {
+  padding: 40px !important;
+}
+
+/* Footer: more margin */
+.site-footer {
+  margin-top: 60px !important;
+}
