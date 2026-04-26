@@ -70,6 +70,12 @@ def enrich_books():
 
             hit = results[0]
 
+            # Skip if this google_books_id is already used by another book
+            existing = db.query(Book).filter(Book.google_books_id == hit["google_books_id"]).first()
+            if existing:
+                skipped += 1
+                continue
+
             # Update book fields
             book.google_books_id = hit["google_books_id"]
             book.cover_url = hit["cover_url"]
