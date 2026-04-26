@@ -5,50 +5,13 @@
 <div class="page-title">plook</div>
 <h1 class="page-heading">pile a lire</h1>
 
-{% if items %}
-<div class="pal-list">
-  {% for item in items %}
-  <div class="pal-item">
-    <a href="/livre/{{ item.book.id }}" class="pal-link">
-      <div class="pal-cover">
-        {% if item.book.cover_url %}
-        <img src="{{ item.book.cover_url }}" alt="{{ item.book.title }}" loading="lazy">
-        {% else %}
-        <div class="pal-cover-placeholder">{{ item.book.title[0] if item.book.title else '?' }}</div>
-        {% endif %}
-      </div>
-      <div class="pal-info">
-        <div class="pal-title">{{ item.book.title }}</div>
-        <div class="pal-author">{{ item.book.author_name or '' }}</div>
-        {% if item.book.reading_progress > 0 %}
-        <div class="pal-progress">
-          <div class="pal-progress-bar">
-            <div class="pal-progress-fill" style="width: {{ item.book.reading_progress }}%"></div>
-          </div>
-          <span class="pal-progress-label">{{ item.book.reading_progress }}%</span>
-        </div>
-        {% else %}
-        <div class="pal-status">pas commence</div>
-        {% endif %}
-      </div>
-    </a>
-  </div>
-  {% endfor %}
-</div>
-{% else %}
-<div class="placeholder-section">
-  Rien dans la PAL. Ajoute des livres depuis la bibliotheque ou la recherche.
-</div>
-{% endif %}
-
-<!-- Recherche pour ajouter -->
-<div class="section" style="margin-top: 32px">
-  <div class="section-label">ajouter un livre</div>
+<!-- Recherche -->
+<div class="section">
   <div class="search-bar">
     <input
       type="text"
       name="q"
-      placeholder="chercher un livre..."
+      placeholder="ajouter un livre..."
       class="search-input"
       hx-get="/search/books"
       hx-trigger="keyup changed delay:400ms"
@@ -59,4 +22,35 @@
   </div>
   <div id="search-results"></div>
 </div>
+
+{% if items %}
+<div class="library-grid">
+  {% for item in items %}
+  <a href="/livre/{{ item.book.id }}" class="library-card">
+    <div class="library-poster">
+      {% if item.book.cover_url %}
+      <img src="{{ item.book.cover_url }}" alt="{{ item.book.title }}" loading="lazy">
+      {% else %}
+      <div class="library-poster-placeholder">
+        <div class="placeholder-spine"></div>
+        <span class="placeholder-title">{{ item.book.title }}</span>
+        <span class="placeholder-author">{{ item.book.author_name or '' }}</span>
+      </div>
+      {% endif %}
+      {% if item.book.reading_progress > 0 %}
+      <div class="book-progress-overlay">{{ item.book.reading_progress }}%</div>
+      {% endif %}
+    </div>
+    <div class="library-info">
+      <div class="library-title">{{ item.book.title }}</div>
+      <div class="library-author">{{ item.book.author_name or '' }}</div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="placeholder-section">
+  Rien dans la PAL. Cherche un livre ci-dessus pour l'ajouter.
+</div>
+{% endif %}
 {% endblock %}

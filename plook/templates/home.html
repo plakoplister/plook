@@ -25,7 +25,7 @@
     </div>
   </div>
   <div class="split-right">
-    <div class="section-label">actualites</div>
+    <div class="section-label">sorties de tes auteurs</div>
     {% if author_releases %}
     {% for book in author_releases[:3] %}
     <div class="split-news-item">
@@ -35,58 +35,68 @@
     </div>
     {% endfor %}
     {% else %}
-    <div class="placeholder-section">Suis des auteurs pour voir leurs sorties ici.</div>
+    <div style="color:var(--bois);font-size:13px;padding:12px 0;">Suis des auteurs pour voir leurs sorties ici.</div>
     {% endif %}
   </div>
 </div>
 
-<!-- Bottom grid -->
-<div class="bottom-grid">
-  <!-- Sorties a venir -->
-  <div class="sorties-card">
-    <div class="section-label">sorties a venir</div>
-    {% if upcoming %}
-    {% for book in upcoming %}
-    <div class="sortie-row">
-      <div class="sortie-dot"></div>
-      <div class="sortie-info">
-        <div class="sortie-title">{{ book.title }}</div>
-        <div class="sortie-author">{{ book.author_name }}</div>
-      </div>
-      <div class="sortie-date">{{ book.year or 'bientot' }}</div>
-    </div>
-    {% endfor %}
-    {% else %}
-    <div class="placeholder-section">Aucune sortie annoncee.</div>
-    {% endif %}
-  </div>
-
-  <!-- Plook recommande -->
-  <div class="recos-card">
-    <div class="section-label">plook recommande</div>
-    {% if recommendations %}
-    <div class="reco-row">
-      {% for reco in recommendations %}
-      <div class="reco-card">
-        <div class="reco-cover">
-          {% if reco.cover_url %}
-          <img src="{{ reco.cover_url }}" alt="{{ reco.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
-          {% else %}
-          <div class="reco-cover-inner">{{ reco.title }}</div>
-          {% endif %}
+<!-- Plook recommande — meme grille que bibliotheque -->
+{% if recommendations %}
+<div class="section">
+  <div class="section-label">plook recommande</div>
+  <div class="library-grid">
+    {% for reco in recommendations %}
+    <div class="library-card">
+      <div class="library-poster">
+        {% if reco.cover_url %}
+        <img src="{{ reco.cover_url }}" alt="{{ reco.title }}" loading="lazy">
+        {% else %}
+        <div class="library-poster-placeholder">
+          <div class="placeholder-spine"></div>
+          <span class="placeholder-title">{{ reco.title }}</span>
+          <span class="placeholder-author">{{ reco.author }}</span>
         </div>
-        <div class="reco-title">{{ reco.title }}</div>
-        <div class="reco-author">{{ reco.author }}</div>
+        {% endif %}
+      </div>
+      <div class="library-info">
+        <div class="library-title">{{ reco.title }}</div>
+        <div class="library-author">{{ reco.author }}</div>
         {% if reco.why %}
         <div class="reco-why">"{{ reco.why }}"</div>
         {% endif %}
       </div>
-      {% endfor %}
     </div>
-    {% else %}
-    <div class="placeholder-section">Les recommandations arrivent bientot.</div>
-    {% endif %}
+    {% endfor %}
   </div>
 </div>
+{% endif %}
+
+<!-- Sorties a venir -->
+{% if upcoming %}
+<div class="section">
+  <div class="section-label">a venir</div>
+  <div class="library-grid">
+    {% for book in upcoming %}
+    <a href="/livre/{{ book.id }}" class="library-card">
+      <div class="library-poster">
+        {% if book.cover_url %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+        {% else %}
+        <div class="library-poster-placeholder">
+          <div class="placeholder-spine"></div>
+          <span class="placeholder-title">{{ book.title }}</span>
+          <span class="placeholder-author">{{ book.author_name or '' }}</span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="library-info">
+        <div class="library-title">{{ book.title }}</div>
+        <div class="library-author">{{ book.author_name or '' }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 {% endblock %}

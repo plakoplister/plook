@@ -1723,3 +1723,69 @@ h2 {
 .reco-cover, .library-poster, .reading-cover, .pal-cover {
   aspect-ratio: 2/3;
 }
+
+/* ========== FINAL FIXES 26 avril ========== */
+
+/* Split hero: titre BLANC GRAS visible sur fond sombre */
+.split-title {
+  color: #FFFFFF !important;
+  font-size: 32px !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.split-author {
+  color: rgba(255,255,255,0.7) !important;
+}
+.split-pct {
+  color: var(--or-page) !important;
+  font-size: 14px !important;
+}
+.split-stat-val {
+  color: #FFFFFF !important;
+  font-size: 22px !important;
+}
+
+/* Auteurs cards: MEME TAILLE que book cards (pas immenses) */
+.authors-grid {
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)) !important;
+  gap: 22px !important;
+}
+.author-card {
+  aspect-ratio: 2/3 !important;
+}
+.card-name {
+  font-size: 14px !important;
+}
+.card-count {
+  font-size: 10px !important;
+}
+.card-initial {
+  font-size: 80px !important;
+}
+
+/* Book progress overlay on card */
+.book-progress-overlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: var(--encre-sepia);
+  color: var(--or-page);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+/* reco-why visible en accueil */
+.reco-why {
+  font-family: 'Libre Baskerville', serif !important;
+  font-style: italic !important;
+  font-size: 10px !important;
+  color: var(--cuir) !important;
+  margin-top: 4px;
+}
+
+/* Remove bottom-grid on home — use library-grid for everything */
+.bottom-grid {
+  display: none !important;
+}
