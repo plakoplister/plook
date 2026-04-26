@@ -57,6 +57,18 @@ def livre_detail(book_id):
         db.close()
 
 
+@plook_app.route("/auteurs")
+def auteurs():
+    db = get_db()
+    try:
+        authors = db.query(Author).order_by(Author.name).all()
+        followed = [a for a in authors if a.is_followed]
+        others = [a for a in authors if not a.is_followed]
+        return render_template("auteurs.html", request=request, followed=followed, others=others)
+    finally:
+        db.close()
+
+
 @plook_app.route("/pal")
 def pal():
     db = get_db()

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Plook — Auteurs{% endblock %}
+
+{% block content %}
+<h1>auteurs</h1>
+
+{% if followed %}
+<div class="section">
+  <div class="section-label">auteurs suivis</div>
+  <div class="authors-grid">
+    {% for a in followed %}
+    <a href="/auteur/{{ a.id }}" class="author-card author-card-followed">
+      <div class="author-avatar">{{ a.name[0] }}</div>
+      <div class="author-info">
+        <div class="author-name">{{ a.name }}</div>
+        <div class="author-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if others %}
+<div class="section">
+  <div class="section-label">tous les auteurs ({{ others|length }})</div>
+  <div class="authors-grid">
+    {% for a in others %}
+    <a href="/auteur/{{ a.id }}" class="author-card">
+      <div class="author-avatar">{{ a.name[0] }}</div>
+      <div class="author-info">
+        <div class="author-name">{{ a.name }}</div>
+        <div class="author-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
