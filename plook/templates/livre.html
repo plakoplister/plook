@@ -10,6 +10,7 @@
     <img src="{{ book.cover_url }}" alt="{{ book.title }}">
     {% else %}
     <div class="book-cover-empty">
+      <div class="placeholder-spine"></div>
       <span class="placeholder-title">{{ book.title }}</span>
       <span class="placeholder-author">{{ book.author_name or '' }}</span>
     </div>
@@ -27,7 +28,6 @@
     </div>
     <div class="book-detail-meta">
       {% if book.year %}{{ book.year }}{% endif %}
-      {% if book.genre %} -- {{ book.genre }}{% endif %}
       {% if book.page_count %} -- {{ book.page_count }} pages{% endif %}
     </div>
 
@@ -38,7 +38,10 @@
     {% endif %}
 
     {% if book.synopsis %}
-    <p class="book-synopsis">{{ book.synopsis }}</p>
+    <div class="book-synopsis-section">
+      <div class="section-label">resume</div>
+      <p class="book-synopsis">{{ book.synopsis }}</p>
+    </div>
     {% endif %}
 
     <!-- Rating etoiles -->

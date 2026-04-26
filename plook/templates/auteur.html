@@ -2,22 +2,42 @@
 {% block title %}Plook — {{ author.name }}{% endblock %}
 
 {% block content %}
-<a href="javascript:history.back()" class="back-link" aria-label="retour a la page precedente">&larr; retour</a>
+<a href="/auteurs" class="back-link" aria-label="retour aux auteurs">&larr; auteurs</a>
 
-<div class="author-header">
-  <h1 class="author-name">{{ author.name }}</h1>
-  {% if author.bio %}
-  <p class="author-bio">{{ author.bio }}</p>
-  {% endif %}
-  <form hx-post="/auteur/{{ author.id }}/toggle-follow" hx-target="#follow-btn" hx-swap="outerHTML">
-    <button type="submit" id="follow-btn" class="btn btn-follow {% if author.is_followed %}active{% endif %}">
-      {% if author.is_followed %}suivi{% else %}suivre{% endif %}
-    </button>
-  </form>
+<div class="author-detail-header">
+  <div class="author-detail-portrait">
+    {% if author.photo_url %}
+    <img src="{{ author.photo_url }}" alt="{{ author.name }}" class="author-photo-lg author-parallax" loading="lazy">
+    {% else %}
+    <div class="author-avatar-xl author-parallax">{{ author.name[0] }}</div>
+    {% endif %}
+  </div>
+  <div class="author-detail-info">
+    <h1 class="author-name">{{ author.name }}</h1>
+    <div class="author-detail-stats">
+      <span class="author-stat">{{ books|length }} livre{{ 's' if books|length > 1 else '' }}</span>
+      {% set read_count = books|selectattr('is_read')|list|length %}
+      {% if read_count > 0 %}
+      <span class="author-stat-sep">/</span>
+      <span class="author-stat">{{ read_count }} lu{{ 's' if read_count > 1 else '' }}</span>
+      {% endif %}
+    </div>
+    {% if author.bio %}
+    <p class="author-bio">{{ author.bio }}</p>
+    {% endif %}
+    <form hx-post="/auteur/{{ author.id }}/toggle-follow" hx-target="#follow-btn" hx-swap="outerHTML">
+      <button type="submit" id="follow-btn" class="btn btn-follow {% if author.is_followed %}active{% endif %}">
+        {% if author.is_followed %}suivi{% else %}suivre cet auteur{% endif %}
+      </button>
+    </form>
+  </div>
 </div>
 
 <div class="section">
-  <div class="section-label">ses livres</div>
+  <div class="section-header">
+    <div class="section-label">ses livres</div>
+    <span class="section-count">{{ books|length }}</span>
+  </div>
   {% if books %}
   <div class="library-grid">
     {% for book in books %}
@@ -48,4 +68,15 @@
   </div>
   {% endif %}
 </div>
+
+<script>
+(function() {
+  var el = document.querySelector('.author-parallax');
+  if (!el) return;
+  window.addEventListener('scroll', function() {
+    var offset = window.scrollY * 0.15;
+    el.style.transform = 'translateY(' + offset + 'px)';
+  }, { passive: true });
+})();
+</script>
 {% endblock %}

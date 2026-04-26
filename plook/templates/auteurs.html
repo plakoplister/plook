@@ -2,18 +2,34 @@
 {% block title %}Plook — Auteurs{% endblock %}
 
 {% block content %}
-<h1>auteurs</h1>
+<div class="page-header">
+  <h1>auteurs</h1>
+  <p class="subtitle">{{ (followed|length) + (others|length) }} auteurs dans ta collection</p>
+</div>
 
 {% if followed %}
 <div class="section">
-  <div class="section-label">auteurs suivis</div>
-  <div class="authors-grid">
+  <div class="section-header">
+    <div class="section-label">auteurs suivis</div>
+    <span class="section-count">{{ followed|length }}</span>
+  </div>
+  <div class="authors-grid authors-grid-rich">
     {% for a in followed %}
     <a href="/auteur/{{ a.id }}" class="author-card author-card-followed">
-      <div class="author-avatar">{{ a.name[0] }}</div>
-      <div class="author-info">
-        <div class="author-name">{{ a.name }}</div>
-        <div class="author-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+      <div class="author-card-top">
+        {% if a.photo_url %}
+        <img src="{{ a.photo_url }}" alt="{{ a.name }}" class="author-photo" loading="lazy">
+        {% else %}
+        <div class="author-avatar-lg">{{ a.name[0] }}</div>
+        {% endif %}
+        <span class="badge badge-followed">suivi</span>
+      </div>
+      <div class="author-card-body">
+        <div class="author-card-name">{{ a.name }}</div>
+        <div class="author-card-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+        {% if a.bio %}
+        <p class="author-card-bio">{{ a.bio[:120] }}{% if a.bio|length > 120 %}...{% endif %}</p>
+        {% endif %}
       </div>
     </a>
     {% endfor %}
@@ -23,18 +39,36 @@
 
 {% if others %}
 <div class="section">
-  <div class="section-label">tous les auteurs ({{ others|length }})</div>
-  <div class="authors-grid">
+  <div class="section-header">
+    <div class="section-label">tous les auteurs</div>
+    <span class="section-count">{{ others|length }}</span>
+  </div>
+  <div class="authors-grid authors-grid-rich">
     {% for a in others %}
     <a href="/auteur/{{ a.id }}" class="author-card">
-      <div class="author-avatar">{{ a.name[0] }}</div>
-      <div class="author-info">
-        <div class="author-name">{{ a.name }}</div>
-        <div class="author-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+      <div class="author-card-top">
+        {% if a.photo_url %}
+        <img src="{{ a.photo_url }}" alt="{{ a.name }}" class="author-photo" loading="lazy">
+        {% else %}
+        <div class="author-avatar-lg">{{ a.name[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="author-card-body">
+        <div class="author-card-name">{{ a.name }}</div>
+        <div class="author-card-count">{{ a.books|length }} livre{{ 's' if a.books|length > 1 else '' }}</div>
+        {% if a.bio %}
+        <p class="author-card-bio">{{ a.bio[:120] }}{% if a.bio|length > 120 %}...{% endif %}</p>
+        {% endif %}
       </div>
     </a>
     {% endfor %}
   </div>
+</div>
+{% endif %}
+
+{% if not followed and not others %}
+<div class="empty">
+  Aucun auteur dans la collection.
 </div>
 {% endif %}
 {% endblock %}

@@ -1,11 +1,11 @@
 <label class="lu-toggle"
-  hx-post="/livre/{{ book_id }}/toggle-lu"
+  hx-post="/livre/{{ book.id }}/toggle-lu"
   hx-target="#lu-section"
   hx-swap="innerHTML"
 >
-  <input type="checkbox" {% if is_read %}checked{% endif %} class="sr-only">
-  <span class="lu-checkbox {% if is_read %}active{% endif %}">
-    {% if is_read %}&#10003;{% endif %}
+  <input type="checkbox" {% if book.is_read %}checked{% endif %} class="sr-only">
+  <span class="lu-checkbox {% if book.is_read %}active{% endif %}">
+    {% if book.is_read %}&#10003;{% endif %}
   </span>
-  <span class="lu-label">Lu</span>
+  <span class="lu-label">{% if book.is_read %}Lu{% else %}Marquer comme lu{% endif %}</span>
 </label>

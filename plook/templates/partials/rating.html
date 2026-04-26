@@ -1,10 +1,10 @@
 <div class="rating-row">
   <div class="rating-stars">
-    {% set current_score = rating.score if rating else 0 %}
+    {% set current_score = book.score if book.score else 0 %}
     {% for i in range(1, 6) %}
     <button
       class="star {% if current_score >= i %}active{% endif %}"
-      hx-post="/livre/{{ book_id }}/rate"
+      hx-post="/livre/{{ book.id }}/rate"
       hx-target="#rating-section"
       hx-swap="innerHTML"
       hx-vals='{"score": {{ i }}}'
@@ -13,4 +13,7 @@
     >&#9733;</button>
     {% endfor %}
   </div>
+  {% if book.score %}
+  <span class="rating-value">{{ book.score }}/5</span>
+  {% endif %}
 </div>

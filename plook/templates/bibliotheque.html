@@ -2,8 +2,10 @@
 {% block title %}Plook — Bibliotheque{% endblock %}
 
 {% block content %}
-<h1>bibliotheque</h1>
-<p class="subtitle" id="library-count">{{ books|length }} livres dans la collection</p>
+<div class="page-header">
+  <h1>bibliotheque</h1>
+  <p class="subtitle" id="library-count">{{ books|length }} livres dans la collection</p>
+</div>
 
 <div class="library-grid" id="library-grid">
   {% for book in books %}
@@ -13,12 +15,13 @@
       <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
       {% else %}
       <div class="library-poster-placeholder">
+        <div class="placeholder-spine"></div>
         <span class="placeholder-title">{{ book.title }}</span>
         <span class="placeholder-author">{{ book.author_name or '' }}</span>
       </div>
       {% endif %}
       {% if book.is_read %}
-      <span class="library-badge library-badge-lu">lu</span>
+      <span class="library-badge library-badge-lu">LU</span>
       {% endif %}
     </div>
     <div class="library-info">
@@ -34,4 +37,18 @@
   Aucun livre dans la bibliotheque pour le moment.
 </div>
 {% endif %}
+
+<script>
+document.querySelectorAll('.library-poster').forEach(function(el) {
+  el.addEventListener('mousemove', function(e) {
+    var r = el.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width - 0.5;
+    var y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = 'rotateY(' + (x * 10) + 'deg) rotateX(' + (-y * 10) + 'deg)';
+  });
+  el.addEventListener('mouseleave', function() {
+    el.style.transform = '';
+  });
+});
+</script>
 {% endblock %}

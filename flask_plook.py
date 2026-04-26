@@ -27,7 +27,40 @@ def get_db():
 
 @plook_app.route("/")
 def home():
-    return render_template("home.html", request=request)
+    db = get_db()
+    try:
+        # En cours de lecture: progress > 0 et pas fini
+        reading_now = (
+            db.query(Book)
+            .filter(Book.reading_progress > 0, Book.is_read == False)
+            .order_by(Book.reading_progress.desc())
+            .all()
+        )
+        # Dernieres sorties des auteurs suivis
+        followed_ids = [
+            a.id for a in db.query(Author).filter(Author.is_followed == True).all()
+        ]
+        author_releases = []
+        if followed_ids:
+            author_releases = (
+                db.query(Book)
+                .filter(Book.author_id.in_(followed_ids))
+                .order_by(Book.year.desc(), Book.added_at.desc())
+                .limit(8)
+                .all()
+            )
+        # Nombre total de livres
+        total_books = db.query(Book).count()
+        return render_template(
+            "home.html",
+            request=request,
+            reading_now=reading_now,
+            author_releases=author_releases,
+            recommendations=[],
+            total_books=total_books,
+        )
+    finally:
+        db.close()
 
 
 @plook_app.route("/bibliotheque")
@@ -36,7 +69,6 @@ def bibliotheque():
     try:
         books = (
             db.query(Book)
-            .filter(Book.cover_url.isnot(None))
             .order_by(Book.author_name, Book.title)
             .all()
         )
@@ -163,6 +195,26 @@ def pal_add():
             db.add(ReadingListItem(book_id=book_id))
             db.commit()
         return '<div class="tag">Ajoute a la PAL</div>'
+    finally:
+        db.close()
+
+
+@plook_app.route("/auteur/<int:author_id>/toggle-follow", methods=["POST"])
+def toggle_follow(author_id):
+    db = get_db()
+    try:
+        author = db.query(Author).get(author_id)
+        if author:
+            author.is_followed = not author.is_followed
+            db.commit()
+        label = "suivi" if author.is_followed else "suivre cet auteur"
+        css = "btn btn-follow active" if author.is_followed else "btn btn-follow"
+        return (
+            f'<button type="submit" id="follow-btn" class="{css}"'
+            f' hx-post="/auteur/{author_id}/toggle-follow"'
+            f' hx-target="#follow-btn" hx-swap="outerHTML">'
+            f'{label}</button>'
+        )
     finally:
         db.close()
 

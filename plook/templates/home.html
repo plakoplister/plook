@@ -3,13 +3,57 @@
 
 {% block content %}
 
-<h1>plook</h1>
-<p class="subtitle">tes livres, tes coups de coeur</p>
+<div class="home-hero">
+  <h1>plook</h1>
+  <p class="subtitle">tes livres, tes coups de coeur</p>
+  {% if total_books %}
+  <span class="home-stat">{{ total_books }} livres dans ta collection</span>
+  {% endif %}
+</div>
+
+<!-- En cours de lecture -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-label">en cours de lecture</div>
+    {% if reading_now %}
+    <span class="section-count">{{ reading_now|length }}</span>
+    {% endif %}
+  </div>
+  {% if reading_now %}
+  <div class="reading-grid">
+    {% for book in reading_now %}
+    <a href="/livre/{{ book.id }}" class="reading-card">
+      <div class="reading-cover">
+        {% if book.cover_url %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+        {% else %}
+        <div class="reading-cover-placeholder">{{ book.title[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="reading-info">
+        <div class="reading-title">{{ book.title }}</div>
+        <div class="reading-author">{{ book.author_name or '' }}</div>
+        <div class="pal-progress">
+          <div class="pal-progress-bar">
+            <div class="pal-progress-fill" style="width: {{ book.reading_progress }}%"></div>
+          </div>
+          <span class="pal-progress-label">{{ book.reading_progress }}%{% if book.page_count %} -- {{ (book.page_count * book.reading_progress / 100)|int }}/{{ book.page_count }} p.{% endif %}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="placeholder-section">
+    Rien en cours -- ouvre un livre et lance-toi.
+  </div>
+  {% endif %}
+</div>
 
 <!-- Dernieres sorties de tes auteurs -->
 <div class="section">
   <div class="section-header">
-    <div class="section-label">dernieres sorties de tes auteurs</div>
+    <div class="section-label">sorties de tes auteurs</div>
   </div>
   {% if author_releases %}
   <div class="reading-grid">
@@ -18,11 +62,16 @@
       <div class="reading-cover">
         {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+        {% else %}
+        <div class="reading-cover-placeholder">{{ book.title[0] }}</div>
         {% endif %}
       </div>
       <div class="reading-info">
         <div class="reading-title">{{ book.title }}</div>
-        <div class="reading-author">{{ book.author }}</div>
+        <div class="reading-author">{{ book.author_name or '' }}</div>
+        {% if book.year %}
+        <div class="reading-year">{{ book.year }}</div>
+        {% endif %}
       </div>
     </a>
     {% endfor %}
@@ -49,13 +98,13 @@
         {% else %}
         <div class="library-poster-placeholder">
           <span class="placeholder-title">{{ book.title }}</span>
-          <span class="placeholder-author">{{ book.author }}</span>
+          <span class="placeholder-author">{{ book.author_name or '' }}</span>
         </div>
         {% endif %}
       </div>
       <div class="library-info">
         <div class="library-title">{{ book.title }}</div>
-        <div class="library-author">{{ book.author }}</div>
+        <div class="library-author">{{ book.author_name or '' }}</div>
       </div>
     </a>
     {% endfor %}
@@ -63,40 +112,6 @@
   {% else %}
   <div class="placeholder-section">
     Les recommandations arrivent bientot.
-  </div>
-  {% endif %}
-</div>
-
-<!-- En cours de lecture -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-label">en cours de lecture</div>
-  </div>
-  {% if reading_now %}
-  <div class="reading-grid">
-    {% for book in reading_now %}
-    <a href="/livre/{{ book.id }}" class="reading-card">
-      <div class="reading-cover">
-        {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
-        {% endif %}
-      </div>
-      <div class="reading-info">
-        <div class="reading-title">{{ book.title }}</div>
-        <div class="reading-author">{{ book.author }}</div>
-        <div class="pal-progress">
-          <div class="pal-progress-bar">
-            <div class="pal-progress-fill" style="width: {{ book.progress }}%"></div>
-          </div>
-          <span class="pal-progress-label">{{ book.progress }}%</span>
-        </div>
-      </div>
-    </a>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="placeholder-section">
-    Rien en cours -- ouvre un livre et lance-toi.
   </div>
   {% endif %}
 </div>
