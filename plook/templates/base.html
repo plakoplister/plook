@@ -12,14 +12,14 @@
 </head>
 <body>
   <nav class="navbar" role="navigation" aria-label="navigation principale">
-    <a href="/plook" class="logo" aria-label="Plook accueil">
+    <a href="/" class="logo" aria-label="Plook accueil">
       <img src="/plook/static/plook-logo-navbar.png" alt="Plook" class="logo-img" height="80">
     </a>
     <ul class="nav-links">
-      <li><a href="/plook" {% if request.url.path == "/plook" or request.url.path == "/plook/" %}class="active"{% endif %}>accueil</a></li>
-      <li><a href="/plook/bibliotheque" {% if request.url.path == "/plook/bibliotheque" %}class="active"{% endif %}>bibliotheque</a></li>
-      <li><a href="/plook/pal" {% if request.url.path == "/plook/pal" %}class="active"{% endif %}>pile a lire</a></li>
-      <li><a href="/plook/auteurs" {% if request.url.path == "/plook/auteurs" %}class="active"{% endif %}>auteurs</a></li>
+      <li><a href="/" {% if request.url.path == "/plook" or request.url.path == "/" %}class="active"{% endif %}>accueil</a></li>
+      <li><a href="/bibliotheque" {% if request.url.path == "/bibliotheque" %}class="active"{% endif %}>bibliotheque</a></li>
+      <li><a href="/pal" {% if request.url.path == "/pal" %}class="active"{% endif %}>pile a lire</a></li>
+      <li><a href="/auteurs" {% if request.url.path == "/auteurs" %}class="active"{% endif %}>auteurs</a></li>
     </ul>
   </nav>
 

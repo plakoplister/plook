@@ -20,7 +20,7 @@
     <h1 class="book-detail-title">{{ book.title }}</h1>
     <div class="book-detail-author">
       {% if book.author_id %}
-      par <a href="/plook/auteur/{{ book.author_id }}">{{ book.author_name }}</a>
+      par <a href="/auteur/{{ book.author_id }}">{{ book.author_name }}</a>
       {% elif book.author_name %}
       par {{ book.author_name }}
       {% endif %}

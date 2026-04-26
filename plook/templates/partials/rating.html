@@ -4,7 +4,7 @@
     {% for i in range(1, 6) %}
     <button
       class="star {% if current_score >= i %}active{% endif %}"
-      hx-post="/plook/livre/{{ book_id }}/rate"
+      hx-post="/livre/{{ book_id }}/rate"
       hx-target="#rating-section"
       hx-swap="innerHTML"
       hx-vals='{"score": {{ i }}}'

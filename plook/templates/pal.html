@@ -8,7 +8,7 @@
 {% if items %}
 <div class="pal-list">
   {% for item in items %}
-  <a href="/plook/livre/{{ item.book.id }}" class="pal-item">
+  <a href="/livre/{{ item.book.id }}" class="pal-item">
     <div class="pal-cover">
       {% if item.book.cover_url %}
       <img src="{{ item.book.cover_url }}" alt="{{ item.book.title }}" loading="lazy">

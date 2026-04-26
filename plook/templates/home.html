@@ -14,7 +14,7 @@
   {% if author_releases %}
   <div class="reading-grid">
     {% for book in author_releases %}
-    <a href="/plook/livre/{{ book.id }}" class="reading-card">
+    <a href="/livre/{{ book.id }}" class="reading-card">
       <div class="reading-cover">
         {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
@@ -42,7 +42,7 @@
   {% if recommendations %}
   <div class="library-grid">
     {% for book in recommendations %}
-    <a href="/plook/livre/{{ book.id }}" class="library-card">
+    <a href="/livre/{{ book.id }}" class="library-card">
       <div class="library-poster">
         {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
@@ -75,7 +75,7 @@
   {% if reading_now %}
   <div class="reading-grid">
     {% for book in reading_now %}
-    <a href="/plook/livre/{{ book.id }}" class="reading-card">
+    <a href="/livre/{{ book.id }}" class="reading-card">
       <div class="reading-cover">
         {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">

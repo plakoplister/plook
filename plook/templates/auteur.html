@@ -9,7 +9,7 @@
   {% if author.bio %}
   <p class="author-bio">{{ author.bio }}</p>
   {% endif %}
-  <form hx-post="/plook/auteur/{{ author.id }}/toggle-follow" hx-target="#follow-btn" hx-swap="outerHTML">
+  <form hx-post="/auteur/{{ author.id }}/toggle-follow" hx-target="#follow-btn" hx-swap="outerHTML">
     <button type="submit" id="follow-btn" class="btn btn-follow {% if author.is_followed %}active{% endif %}">
       {% if author.is_followed %}suivi{% else %}suivre{% endif %}
     </button>
@@ -21,7 +21,7 @@
   {% if books %}
   <div class="library-grid">
     {% for book in books %}
-    <a href="/plook/livre/{{ book.id }}" class="library-card">
+    <a href="/livre/{{ book.id }}" class="library-card">
       <div class="library-poster">
         {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
