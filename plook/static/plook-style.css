@@ -1692,3 +1692,34 @@ h2 {
   transition: opacity 0.2s, transform 0.15s;
 }
 .btn-sm:hover { opacity: 0.85; transform: translateY(-1px); }
+
+/* ========== CRITICAL CONTRAST FIXES ========== */
+
+/* Split right: fond BLANC (pas creme sur parchemin) */
+.split-right {
+  background: #FFFFFF !important;
+}
+
+/* Sorties + Recos cards: fond BLANC + bordure visible */
+.sorties-card, .recos-card {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--border) !important;
+}
+
+/* Section labels everywhere: SEPIA bold, never gris-clair */
+.section-label {
+  color: var(--encre-sepia) !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}
+
+/* Bottom grid: more gap for breathing room */
+.bottom-grid {
+  gap: 24px !important;
+  margin-top: 8px;
+}
+
+/* Consistent book cover aspect ratio everywhere */
+.reco-cover, .library-poster, .reading-cover, .pal-cover {
+  aspect-ratio: 2/3;
+}
