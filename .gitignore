@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/plook.db
+data/plook_cache.json
+.DS_Store

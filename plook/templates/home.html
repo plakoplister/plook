@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Plook — Accueil{% endblock %}
+
+{% block content %}
+
+<h1>plook</h1>
+<p class="subtitle">tes livres, tes coups de coeur</p>
+
+<!-- Dernieres sorties de tes auteurs -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-label">dernieres sorties de tes auteurs</div>
+  </div>
+  {% if author_releases %}
+  <div class="reading-grid">
+    {% for book in author_releases %}
+    <a href="/plook/livre/{{ book.id }}" class="reading-card">
+      <div class="reading-cover">
+        {% if book.cover_url %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+        {% endif %}
+      </div>
+      <div class="reading-info">
+        <div class="reading-title">{{ book.title }}</div>
+        <div class="reading-author">{{ book.author }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="placeholder-section">
+    Aucune sortie recente -- suis des auteurs pour voir leurs nouveautes ici.
+  </div>
+  {% endif %}
+</div>
+
+<!-- Plook recommande -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-label">plook recommande</div>
+  </div>
+  {% if recommendations %}
+  <div class="library-grid">
+    {% for book in recommendations %}
+    <a href="/plook/livre/{{ book.id }}" class="library-card">
+      <div class="library-poster">
+        {% if book.cover_url %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+        {% else %}
+        <div class="library-poster-placeholder">
+          <span class="placeholder-title">{{ book.title }}</span>
+          <span class="placeholder-author">{{ book.author }}</span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="library-info">
+        <div class="library-title">{{ book.title }}</div>
+        <div class="library-author">{{ book.author }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="placeholder-section">
+    Les recommandations arrivent bientot.
+  </div>
+  {% endif %}
+</div>
+
+<!-- En cours de lecture -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-label">en cours de lecture</div>
+  </div>
+  {% if reading_now %}
+  <div class="reading-grid">
+    {% for book in reading_now %}
+    <a href="/plook/livre/{{ book.id }}" class="reading-card">
+      <div class="reading-cover">
+        {% if book.cover_url %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+        {% endif %}
+      </div>
+      <div class="reading-info">
+        <div class="reading-title">{{ book.title }}</div>
+        <div class="reading-author">{{ book.author }}</div>
+        <div class="pal-progress">
+          <div class="pal-progress-bar">
+            <div class="pal-progress-fill" style="width: {{ book.progress }}%"></div>
+          </div>
+          <span class="pal-progress-label">{{ book.progress }}%</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="placeholder-section">
+    Rien en cours -- ouvre un livre et lance-toi.
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

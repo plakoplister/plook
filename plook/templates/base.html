@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Plook{% endblock %}</title>
+  <link rel="icon" type="image/png" href="/plook/static/favicon.png">
+  <link rel="stylesheet" href="/plook/static/plook-style.css">
+  <meta name="view-transition" content="same-origin">
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="navigation principale">
+    <a href="/plook" class="logo" aria-label="Plook accueil">
+      <img src="/plook/static/logo.png" alt="Plook" class="logo-img">
+    </a>
+    <ul class="nav-links">
+      <li><a href="/plook" {% if request.url.path == "/plook" or request.url.path == "/plook/" %}class="active"{% endif %}>accueil</a></li>
+      <li><a href="/plook/bibliotheque" {% if request.url.path == "/plook/bibliotheque" %}class="active"{% endif %}>bibliotheque</a></li>
+      <li><a href="/plook/pal" {% if request.url.path == "/plook/pal" %}class="active"{% endif %}>pile a lire</a></li>
+      <li><a href="/plook/auteurs" {% if request.url.path == "/plook/auteurs" %}class="active"{% endif %}>auteurs</a></li>
+    </ul>
+  </nav>
+
+  <div class="container page">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <span class="footer-text">plook -- tes livres, tes coups de coeur</span>
+    </div>
+  </footer>
+</body>
+</html>

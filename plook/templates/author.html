@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Plook — {{ author.name }}{% endblock %}
+
+{% block content %}
+<a href="javascript:history.back()" class="back-link" aria-label="retour a la page precedente">&larr; retour</a>
+
+<div class="author-header">
+  <h1 class="author-name">{{ author.name }}</h1>
+  {% if author.bio %}
+  <p class="author-bio">{{ author.bio }}</p>
+  {% endif %}
+  <form hx-post="/plook/auteur/{{ author.id }}/toggle-follow" hx-target="#follow-btn" hx-swap="outerHTML">
+    <button type="submit" id="follow-btn" class="btn btn-follow {% if author.is_followed %}active{% endif %}">
+      {% if author.is_followed %}suivi{% else %}suivre{% endif %}
+    </button>
+  </form>
+</div>
+
+<div class="section">
+  <div class="section-label">ses livres</div>
+  {% if books %}
+  <div class="library-grid">
+    {% for book in books %}
+    <a href="/plook/livre/{{ book.id }}" class="library-card">
+      <div class="library-poster">
+        {% if book.cover_url %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+        {% else %}
+        <div class="library-poster-placeholder">
+          <span class="placeholder-title">{{ book.title }}</span>
+          <span class="placeholder-author">{{ author.name }}</span>
+        </div>
+        {% endif %}
+        {% if book.is_read %}
+        <span class="library-badge library-badge-lu">lu</span>
+        {% endif %}
+      </div>
+      <div class="library-info">
+        <div class="library-title">{{ book.title }}</div>
+        <div class="library-meta">{{ book.year or '' }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    Aucun livre de cet auteur dans la collection.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

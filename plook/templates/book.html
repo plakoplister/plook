@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Plook — {{ book.title }}{% endblock %}
+
+{% block content %}
+<a href="javascript:history.back()" class="back-link" aria-label="retour a la page precedente">&larr; retour</a>
+
+<div class="book-detail">
+  <div class="book-detail-cover">
+    {% if book.cover_url %}
+    <img src="{{ book.cover_url }}" alt="{{ book.title }}">
+    {% else %}
+    <div class="book-cover-empty">
+      <span class="placeholder-title">{{ book.title }}</span>
+      <span class="placeholder-author">{{ book.author }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="book-detail-content">
+    <h1 class="book-detail-title">{{ book.title }}</h1>
+    <div class="book-detail-author">
+      par <a href="/plook/auteur/{{ book.author_id }}">{{ book.author }}</a>
+    </div>
+    <div class="book-detail-meta">
+      {% if book.year %}{{ book.year }}{% endif %}
+      {% if book.genre %} · {{ book.genre }}{% endif %}
+      {% if book.pages %} · {{ book.pages }} pages{% endif %}
+    </div>
+
+    {% if book.genre %}
+    <div class="tags" style="margin: 12px 0">
+      <span class="tag">{{ book.genre }}</span>
+    </div>
+    {% endif %}
+
+    {% if book.synopsis %}
+    <p class="book-synopsis">{{ book.synopsis }}</p>
+    {% endif %}
+
+    <!-- Rating etoiles -->
+    <div class="rating-section" id="rating-section">
+      <div class="section-label">ta note</div>
+      {% include "partials/rating.html" %}
+    </div>
+
+    <!-- Toggle lu -->
+    <div class="lu-section" id="lu-section">
+      {% include "partials/lu_toggle.html" %}
+    </div>
+
+    <!-- Progression lecture -->
+    {% if book.progress is defined and book.progress > 0 and not book.is_read %}
+    <div class="progress-section">
+      <div class="section-label">progression</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width: {{ book.progress }}%"></div>
+      </div>
+      <span class="progress-label">{{ book.progress }}% lu{% if book.pages %} · {{ (book.pages * book.progress / 100)|int }} / {{ book.pages }} pages{% endif %}</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

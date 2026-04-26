@@ -1,0 +1,9 @@
+flask
+sqlalchemy
+python-dotenv
+pandas
+openpyxl
+jinja2
+httpx
+anthropic
+a2wsgi

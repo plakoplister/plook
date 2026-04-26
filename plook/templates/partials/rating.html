@@ -1,0 +1,16 @@
+<div class="rating-row">
+  <div class="rating-stars">
+    {% set current_score = rating.score if rating else 0 %}
+    {% for i in range(1, 6) %}
+    <button
+      class="star {% if current_score >= i %}active{% endif %}"
+      hx-post="/plook/livre/{{ book_id }}/rate"
+      hx-target="#rating-section"
+      hx-swap="innerHTML"
+      hx-vals='{"score": {{ i }}}'
+      title="{{ i }}/5"
+      aria-label="noter {{ i }} sur 5"
+    >&#9733;</button>
+    {% endfor %}
+  </div>
+</div>

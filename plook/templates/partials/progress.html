@@ -1,0 +1,8 @@
+{% if book and book.reading_progress %}
+<div class="pal-progress">
+  <div class="pal-progress-bar">
+    <div class="pal-progress-fill" style="width: {{ book.reading_progress }}%"></div>
+  </div>
+  <span class="pal-progress-label">{{ book.reading_progress }}%</span>
+</div>
+{% endif %}
