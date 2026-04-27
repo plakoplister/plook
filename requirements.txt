@@ -6,4 +6,5 @@ openpyxl
 jinja2
 httpx
 anthropic
+feedparser
 a2wsgi

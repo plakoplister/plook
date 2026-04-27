@@ -26,26 +26,36 @@
 {% if items %}
 <div class="library-grid">
   {% for item in items %}
-  <a href="/livre/{{ item.book.id }}" class="library-card">
-    <div class="library-poster">
-      {% if item.book.cover_url %}
-      <img src="{{ item.book.cover_url }}" alt="{{ item.book.title }}" loading="lazy">
-      {% else %}
-      <div class="library-poster-placeholder">
-        <div class="placeholder-spine"></div>
-        <span class="placeholder-title">{{ item.book.title }}</span>
-        <span class="placeholder-author">{{ item.book.author_name or '' }}</span>
+  <div class="library-card-wrap" id="pal-card-{{ item.id }}">
+    <a href="/livre/{{ item.book.id }}" class="library-card">
+      <div class="library-poster">
+        {% if item.book.cover_url %}
+        <img src="{{ item.book.cover_url }}" alt="{{ item.book.title }}" loading="lazy">
+        {% else %}
+        <div class="library-poster-placeholder">
+          <div class="placeholder-spine"></div>
+          <span class="placeholder-title">{{ item.book.title }}</span>
+          <span class="placeholder-author">{{ item.book.author_name or '' }}</span>
+        </div>
+        {% endif %}
+        {% if item.book.reading_progress > 0 %}
+        <div class="book-progress-overlay">{{ item.book.reading_progress }}%</div>
+        {% endif %}
       </div>
-      {% endif %}
-      {% if item.book.reading_progress > 0 %}
-      <div class="book-progress-overlay">{{ item.book.reading_progress }}%</div>
-      {% endif %}
+      <div class="library-info">
+        <div class="library-title">{{ item.book.title }}</div>
+        <div class="library-author">{{ item.book.author_name or '' }}</div>
+      </div>
+    </a>
+    <div class="card-actions" id="pal-actions-{{ item.id }}">
+      <button hx-post="/pal/mark-read/{{ item.book.id }}" hx-target="#pal-card-{{ item.id }}" hx-swap="outerHTML" class="card-action-btn" title="Termine">Termine</button>
+      <button hx-delete="/pal/remove/{{ item.id }}" hx-target="#pal-card-{{ item.id }}" hx-swap="outerHTML" class="card-action-btn card-action-reject" title="Retirer de la PAL">Retirer</button>
+      <div class="card-action-progress">
+        <input type="range" min="0" max="100" value="{{ item.book.reading_progress }}" hx-post="/pal/progress/{{ item.book.id }}" hx-trigger="change" hx-target="#pal-actions-{{ item.id }} .progress-label" hx-swap="outerHTML" hx-include="this" name="progress" class="progress-slider" title="Progression">
+        <span class="progress-label">{{ item.book.reading_progress }}%</span>
+      </div>
     </div>
-    <div class="library-info">
-      <div class="library-title">{{ item.book.title }}</div>
-      <div class="library-author">{{ item.book.author_name or '' }}</div>
-    </div>
-  </a>
+  </div>
   {% endfor %}
 </div>
 {% else %}

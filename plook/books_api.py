@@ -3,6 +3,7 @@
 import logging
 import os
 import time
+import urllib.parse
 from typing import Optional
 
 import httpx
@@ -223,3 +224,103 @@ def ol_get_cover(isbn: str) -> Optional[str]:
     except Exception as exc:
         log.error("Open Library cover lookup error for ISBN %s: %s", isbn, exc)
         return None
+
+
+def _verify_image_url(url: str, timeout: float = 3.0) -> bool:
+    """Verify that a URL returns an actual image via HEAD request.
+
+    Returns True if the response has an image content-type and status 200.
+    """
+    try:
+        resp = httpx.head(url, timeout=timeout, follow_redirects=True)
+        if resp.status_code != 200:
+            return False
+        content_type = resp.headers.get("content-type", "")
+        return content_type.startswith("image/")
+    except Exception:
+        return False
+
+
+def find_best_cover(
+    title: str, author: str = "", google_books_id: str = None
+) -> Optional[str]:
+    """Find the best available book cover using multiple sources.
+
+    Strategy chain:
+    1. If google_books_id provided, try direct Google Books cover URL
+    2. Search Google Books API by title+author, extract cover
+    3. Search Open Library by title+author
+    4. Try Open Library by ISBN if found
+    5. Fallback: construct Google Books cover URL from search result ID
+
+    Returns cover URL or None if absolutely nothing found.
+    """
+    # --- Step 1: Direct Google Books cover from provided ID ---
+    if google_books_id:
+        direct_url = _google_cover_url(google_books_id)
+        if _verify_image_url(direct_url):
+            log.info("Cover found via direct Google Books ID %s", google_books_id)
+            return direct_url
+
+    # --- Step 2: Search Google Books API ---
+    search_query = title
+    if author:
+        search_query = f"{title} {author}"
+
+    gb_results = search_books(search_query, max_results=3)
+    found_gb_id = None
+    found_isbn = None
+
+    for result in gb_results:
+        # Track first google_books_id and isbn for fallbacks
+        if not found_gb_id and result.get("google_books_id"):
+            found_gb_id = result["google_books_id"]
+        if not found_isbn and result.get("isbn"):
+            found_isbn = result["isbn"]
+
+        cover = result.get("cover_url")
+        if cover and _verify_image_url(cover):
+            log.info("Cover found via Google Books search for %r", title)
+            return cover
+
+    # --- Step 3: Search Open Library by title+author ---
+    _rate_limit_ol()
+    try:
+        ol_params = {"title": title, "limit": "1"}
+        if author:
+            ol_params["author"] = author
+        ol_search_url = f"{OL_BASE}/search.json?{urllib.parse.urlencode(ol_params)}"
+        resp = httpx.get(ol_search_url, timeout=TIMEOUT)
+        resp.raise_for_status()
+        ol_data = resp.json()
+        docs = ol_data.get("docs", [])
+        if docs:
+            doc = docs[0]
+            cover_id = doc.get("cover_i")
+            if cover_id:
+                ol_cover_url = f"{OL_COVERS}/b/id/{cover_id}-L.jpg"
+                if _verify_image_url(ol_cover_url):
+                    log.info("Cover found via Open Library search for %r", title)
+                    return ol_cover_url
+            # Extract ISBN from OL results for step 4
+            ol_isbns = doc.get("isbn", [])
+            if ol_isbns and not found_isbn:
+                found_isbn = ol_isbns[0]
+    except Exception as exc:
+        log.error("Open Library search error for %r: %s", title, exc)
+
+    # --- Step 4: Try Open Library by ISBN ---
+    if found_isbn:
+        ol_isbn_cover = ol_get_cover(found_isbn)
+        if ol_isbn_cover and _verify_image_url(ol_isbn_cover):
+            log.info("Cover found via Open Library ISBN %s for %r", found_isbn, title)
+            return ol_isbn_cover
+
+    # --- Step 5: Fallback to constructed Google Books URL ---
+    if found_gb_id:
+        fallback_url = _google_cover_url(found_gb_id)
+        log.info("Using fallback Google Books cover URL for %r (ID: %s)", title, found_gb_id)
+        return fallback_url
+
+    log.warning("No cover found for %r by %r", title, author)
+    return None

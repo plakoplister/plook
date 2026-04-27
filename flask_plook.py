@@ -7,7 +7,8 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 from plook.database import init_db, SessionLocal
 from plook.models import Book, Author, ReadingListItem, Alert, Dislike
-from plook.recommender import get_recommendations
+from plook.recommender import get_claude_recommendations
+from plook.rss_news import fetch_news
 
 BASE_DIR = Path(__file__).parent / "plook"
 
@@ -38,45 +39,35 @@ def home():
             .all()
         )
 
-        # Sorties recentes : auteurs suivis, annee >= annee en cours
-        current_year = date.today().year
-        followed_ids = [
-            a.id for a in db.query(Author).filter(Author.is_followed == True).all()
-        ]
-        author_releases = []
-        if followed_ids:
-            author_releases = (
-                db.query(Book)
-                .filter(
-                    Book.author_id.in_(followed_ids),
-                    Book.year >= current_year - 1,
-                )
-                .order_by(Book.year.desc(), Book.added_at.desc())
-                .limit(6)
-                .all()
-            )
+        # Auteurs suivis
+        followed_authors = db.query(Author).filter(Author.is_followed == True).all()
+        followed_names = [a.name for a in followed_authors]
 
-        # Livres non lus dans la PAL
-        upcoming = (
-            db.query(Book)
-            .filter(Book.is_read == False, Book.year >= current_year)
-            .order_by(Book.year.desc())
-            .limit(5)
+        # RSS News
+        news = fetch_news(followed_names, limit=6)
+
+        # Alerts (non vues, uniquement 2026)
+        alerts = (
+            db.query(Alert)
+            .filter(Alert.seen == False)
+            .filter(Alert.release_date.ilike("%2026%"))
+            .order_by(Alert.created_at.desc())
+            .limit(6)
             .all()
         )
 
         total_books = db.query(Book).filter(Book.is_read == True).count()
-        followed_count = db.query(Author).filter(Author.is_followed == True).count()
+        followed_count = len(followed_authors)
         pal_count = db.query(ReadingListItem).count()
 
-        recommendations = get_recommendations(db, limit=4)
+        recommendations = get_claude_recommendations(db, limit=7)
 
         return render_template(
             "home.html",
             request=request,
             reading_now=reading_now,
-            author_releases=author_releases,
-            upcoming=upcoming,
+            news=news,
+            alerts=alerts,
             recommendations=recommendations,
             total_books=total_books,
             followed_count=followed_count,
@@ -227,6 +218,166 @@ def toggle_follow(author_id):
             f' hx-target="#follow-btn" hx-swap="outerHTML">'
             f'{label}</button>'
         )
+    finally:
+        db.close()
+
+
+# ==================== Reco actions (HTMX) ====================
+
+@plook_app.route("/reco/add-pal", methods=["POST"])
+def reco_add_pal():
+    db = get_db()
+    try:
+        title = request.form.get("title", "").strip()
+        author = request.form.get("author", "").strip()
+        cover_url = request.form.get("cover_url", "").strip() or None
+        google_books_id = request.form.get("google_books_id", "").strip() or None
+
+        if not title:
+            return '<span class="card-action-feedback">Titre manquant</span>'
+
+        # Find or create book
+        book = None
+        if google_books_id:
+            book = db.query(Book).filter(Book.google_books_id == google_books_id).first()
+        if not book:
+            book = db.query(Book).filter(Book.title == title).first()
+        if not book:
+            author_obj = None
+            if author:
+                author_obj = db.query(Author).filter(Author.name == author).first()
+                if not author_obj:
+                    author_obj = Author(name=author)
+                    db.add(author_obj)
+                    db.flush()
+            book = Book(
+                title=title,
+                author_name=author,
+                author_id=author_obj.id if author_obj else None,
+                google_books_id=google_books_id,
+                cover_url=cover_url,
+                is_read=False,
+            )
+            db.add(book)
+            db.flush()
+
+        existing = db.query(ReadingListItem).filter(ReadingListItem.book_id == book.id).first()
+        if existing:
+            return '<span class="card-action-feedback">Deja dans la PAL</span>'
+
+        db.add(ReadingListItem(book_id=book.id))
+        db.commit()
+        return '<span class="card-action-feedback">Ajoute a la PAL</span>'
+    finally:
+        db.close()
+
+
+@plook_app.route("/reco/mark-read", methods=["POST"])
+def reco_mark_read():
+    db = get_db()
+    try:
+        title = request.form.get("title", "").strip()
+        author = request.form.get("author", "").strip()
+        cover_url = request.form.get("cover_url", "").strip() or None
+        google_books_id = request.form.get("google_books_id", "").strip() or None
+
+        if not title:
+            return '<span class="card-action-feedback">Titre manquant</span>'
+
+        book = None
+        if google_books_id:
+            book = db.query(Book).filter(Book.google_books_id == google_books_id).first()
+        if not book:
+            book = db.query(Book).filter(Book.title == title).first()
+        if not book:
+            author_obj = None
+            if author:
+                author_obj = db.query(Author).filter(Author.name == author).first()
+                if not author_obj:
+                    author_obj = Author(name=author)
+                    db.add(author_obj)
+                    db.flush()
+            book = Book(
+                title=title,
+                author_name=author,
+                author_id=author_obj.id if author_obj else None,
+                google_books_id=google_books_id,
+                cover_url=cover_url,
+                is_read=True,
+            )
+            db.add(book)
+        else:
+            book.is_read = True
+
+        db.commit()
+        return '<span class="card-action-feedback">Marque comme lu</span>'
+    finally:
+        db.close()
+
+
+@plook_app.route("/reco/dislike", methods=["POST"])
+def reco_dislike():
+    db = get_db()
+    try:
+        title = request.form.get("title", "").strip()
+        author = request.form.get("author", "").strip()
+
+        if not title:
+            return '<span class="card-action-feedback">Titre manquant</span>'
+
+        existing = db.query(Dislike).filter(Dislike.title == title).first()
+        if not existing:
+            db.add(Dislike(title=title))
+            db.commit()
+
+        return '<span class="card-action-feedback card-action-rejected">Retire des recos</span>'
+    finally:
+        db.close()
+
+
+# ==================== PAL actions (HTMX) ====================
+
+@plook_app.route("/pal/remove/<int:item_id>", methods=["DELETE"])
+def pal_remove(item_id):
+    db = get_db()
+    try:
+        item = db.query(ReadingListItem).get(item_id)
+        if item:
+            db.delete(item)
+            db.commit()
+        return ""
+    finally:
+        db.close()
+
+
+@plook_app.route("/pal/mark-read/<int:book_id>", methods=["POST"])
+def pal_mark_read(book_id):
+    db = get_db()
+    try:
+        book = db.query(Book).get(book_id)
+        if book:
+            book.is_read = True
+            book.reading_progress = 100
+            # Remove from PAL
+            pal_item = db.query(ReadingListItem).filter(ReadingListItem.book_id == book_id).first()
+            if pal_item:
+                db.delete(pal_item)
+            db.commit()
+        return '<span class="card-action-feedback">Termine -- retire de la PAL</span>'
+    finally:
+        db.close()
+
+
+@plook_app.route("/pal/progress/<int:book_id>", methods=["POST"])
+def pal_progress(book_id):
+    db = get_db()
+    try:
+        progress = int(request.form.get("progress", 0))
+        book = db.query(Book).get(book_id)
+        if book:
+            book.reading_progress = max(0, min(100, progress))
+            db.commit()
+        return f'<span class="progress-label">{book.reading_progress}%</span>'
     finally:
         db.close()
 

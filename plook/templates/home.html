@@ -5,14 +5,23 @@
 
 <!-- Split Hero -->
 <div class="split-hero">
-  <div class="split-left">
+  <div class="split-left"{% if reading_now and reading_now|length > 0 and reading_now[0].cover_url %} style="background-image: url('{{ reading_now[0].cover_url }}')"{% endif %}>
     {% if reading_now and reading_now|length > 0 %}
     {% set book = reading_now[0] %}
     <div class="split-label">en cours de lecture</div>
-    <div class="split-title">{{ book.title }}</div>
-    <div class="split-author">{{ book.author_name or '' }}</div>
-    <div class="split-bar"><div class="split-fill" style="width:{{ book.reading_progress }}%"></div></div>
-    <div class="split-pct">{{ book.reading_progress }}%</div>
+    <div class="split-reading">
+      {% if book.cover_url %}
+      <div class="split-cover">
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}">
+      </div>
+      {% endif %}
+      <div class="split-reading-info">
+        <div class="split-title">{{ book.title }}</div>
+        <div class="split-author">{{ book.author_name or '' }}</div>
+        <div class="split-bar"><div class="split-fill" style="width:{{ book.reading_progress }}%"></div></div>
+        <div class="split-pct">{{ book.reading_progress }}%</div>
+      </div>
+    </div>
     {% else %}
     <div class="split-label">bienvenue</div>
     <div class="split-title">plook</div>
@@ -25,17 +34,17 @@
     </div>
   </div>
   <div class="split-right">
-    <div class="section-label">sorties de tes auteurs</div>
-    {% if author_releases %}
-    {% for book in author_releases[:3] %}
-    <div class="split-news-item">
-      <div class="split-news-source">{{ book.author_name }}</div>
-      <div class="split-news-title">{{ book.title }}</div>
-      <div class="split-news-date">{{ book.year or '' }}</div>
-    </div>
+    <div class="section-label">actualites livres</div>
+    {% if news %}
+    {% for item in news[:3] %}
+    <a href="{{ item.link }}" target="_blank" rel="noopener" class="split-news-item" style="text-decoration:none;color:inherit;display:block;">
+      <div class="split-news-source">{{ item.source }}</div>
+      <div class="split-news-title">{{ item.title }}</div>
+      <div class="split-news-date">{{ item.date }}</div>
+    </a>
     {% endfor %}
     {% else %}
-    <div style="color:var(--bois);font-size:13px;padding:12px 0;">Suis des auteurs pour voir leurs sorties ici.</div>
+    <div style="color:var(--bois);font-size:13px;padding:12px 0;">Aucune actualite pour le moment.</div>
     {% endif %}
   </div>
 </div>
@@ -44,26 +53,33 @@
 {% if recommendations %}
 <div class="section">
   <div class="section-label">plook recommande</div>
-  <div class="library-grid">
+  <div class="alerts-scroll">
     {% for reco in recommendations %}
-    <div class="library-card">
-      <div class="library-poster">
-        {% if reco.cover_url %}
-        <img src="{{ reco.cover_url }}" alt="{{ reco.title }}" loading="lazy">
-        {% else %}
-        <div class="library-poster-placeholder">
-          <div class="placeholder-spine"></div>
-          <span class="placeholder-title">{{ reco.title }}</span>
-          <span class="placeholder-author">{{ reco.author }}</span>
+    <div class="library-card-wrap alert-card">
+      <a href="{% if reco.google_books_id %}https://books.google.com/books?id={{ reco.google_books_id }}{% else %}https://www.google.com/search?q={{ (reco.title ~ ' ' ~ reco.author ~ ' livre')|urlencode }}{% endif %}" target="_blank" rel="noopener" class="library-card" style="text-decoration:none;color:inherit;display:block;">
+        <div class="library-poster">
+          {% if reco.cover_url %}
+          <img src="{{ reco.cover_url }}" alt="{{ reco.title }}" loading="lazy">
+          {% else %}
+          <div class="library-poster-placeholder">
+            <div class="placeholder-spine"></div>
+            <span class="placeholder-title">{{ reco.title }}</span>
+            <span class="placeholder-author">{{ reco.author }}</span>
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
-      </div>
-      <div class="library-info">
-        <div class="library-title">{{ reco.title }}</div>
-        <div class="library-author">{{ reco.author }}</div>
-        {% if reco.why %}
-        <div class="reco-why">"{{ reco.why }}"</div>
-        {% endif %}
+        <div class="library-info">
+          <div class="library-title">{{ reco.title }}</div>
+          <div class="library-author">{{ reco.author }}</div>
+          {% if reco.why %}
+          <div class="reco-why"><em>{{ reco.why }}</em></div>
+          {% endif %}
+        </div>
+      </a>
+      <div class="card-actions">
+        <button hx-post="/reco/add-pal" hx-vals='{"title":"{{ reco.title|e }}", "author":"{{ reco.author|e }}", "cover_url":"{{ reco.cover_url or "" }}", "google_books_id":"{{ reco.google_books_id or "" }}"}' hx-target="closest .card-actions" hx-swap="innerHTML" class="card-action-btn" title="Ajouter a la PAL">+ PAL</button>
+        <button hx-post="/reco/mark-read" hx-vals='{"title":"{{ reco.title|e }}", "author":"{{ reco.author|e }}", "cover_url":"{{ reco.cover_url or "" }}", "google_books_id":"{{ reco.google_books_id or "" }}"}' hx-target="closest .card-actions" hx-swap="innerHTML" class="card-action-btn" title="Deja lu">Lu</button>
+        <button hx-post="/reco/dislike" hx-vals='{"title":"{{ reco.title|e }}", "author":"{{ reco.author|e }}"}' hx-target="closest .card-actions" hx-swap="innerHTML" class="card-action-btn card-action-reject" title="Pas interesse">X</button>
       </div>
     </div>
     {% endfor %}
@@ -71,29 +87,37 @@
 </div>
 {% endif %}
 
-<!-- Sorties a venir -->
-{% if upcoming %}
+<!-- Sorties detectees (alerts) -->
+{% if alerts %}
 <div class="section">
-  <div class="section-label">a venir</div>
-  <div class="library-grid">
-    {% for book in upcoming %}
-    <a href="/livre/{{ book.id }}" class="library-card">
-      <div class="library-poster">
-        {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
-        {% else %}
-        <div class="library-poster-placeholder">
-          <div class="placeholder-spine"></div>
-          <span class="placeholder-title">{{ book.title }}</span>
-          <span class="placeholder-author">{{ book.author_name or '' }}</span>
+  <div class="section-label">nouvelles sorties detectees</div>
+  <div class="alerts-scroll">
+    {% for alert in alerts %}
+    <div class="library-card-wrap alert-card">
+      <a href="https://www.google.com/search?q={{ (alert.book_title ~ ' ' ~ (alert.author.name if alert.author else '') ~ ' livre')|urlencode }}" target="_blank" rel="noopener" class="library-card">
+        <div class="library-poster">
+          {% if alert.cover_url %}
+          <img src="{{ alert.cover_url }}" alt="{{ alert.book_title }}" loading="lazy">
+          {% else %}
+          <div class="library-poster-placeholder">
+            <div class="placeholder-spine"></div>
+            <span class="placeholder-title">{{ alert.book_title }}</span>
+            <span class="placeholder-author">{{ alert.author.name if alert.author else '' }}</span>
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
+        <div class="library-info">
+          <div class="library-title">{{ alert.book_title }}</div>
+          <div class="library-author">{{ alert.author.name if alert.author else '' }}</div>
+          {% if alert.release_date %}
+          <div class="reco-why"><em>{{ alert.release_date }}</em></div>
+          {% endif %}
+        </div>
+      </a>
+      <div class="card-actions">
+        <button hx-post="/reco/add-pal" hx-vals='{"title":"{{ alert.book_title }}", "author":"{{ alert.author.name if alert.author else '' }}", "cover_url":"{{ alert.cover_url or '' }}"}' hx-target="closest .card-actions" hx-swap="innerHTML" class="card-action-btn">+ PAL</button>
       </div>
-      <div class="library-info">
-        <div class="library-title">{{ book.title }}</div>
-        <div class="library-author">{{ book.author_name or '' }}</div>
-      </div>
-    </a>
+    </div>
     {% endfor %}
   </div>
 </div>
