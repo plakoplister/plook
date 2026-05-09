@@ -1,5 +1,6 @@
 """Flask app for Plook (books)."""
 
+import os
 from datetime import date
 from pathlib import Path
 
@@ -16,7 +17,7 @@ plook_app = Flask(
     __name__,
     template_folder=str(BASE_DIR / "templates"),
     static_folder=str(BASE_DIR / "static"),
-    static_url_path="/plook/static",
+    static_url_path="/static",
 )
 
 init_db()
@@ -60,7 +61,13 @@ def home():
         followed_count = len(followed_authors)
         pal_count = db.query(ReadingListItem).count()
 
-        recommendations = get_claude_recommendations(db, limit=7)
+        raw_recommendations = get_claude_recommendations(db, limit=7)
+
+        # Filtrer les recos deja traitees (lues, en PAL, ou dislikees)
+        owned_titles = {b.title.lower() for b in db.query(Book.title).all()}
+        disliked_titles = {d.title.lower() for d in db.query(Dislike).all()}
+        excluded = owned_titles | disliked_titles
+        recommendations = [r for r in raw_recommendations if r.get("title", "").lower() not in excluded]
 
         return render_template(
             "home.html",
@@ -115,14 +122,28 @@ def auteurs():
 def pal():
     db = get_db()
     try:
-        items = (
+        # En cours = tous les livres avec progression > 0 et non lus (pas besoin d'etre en PAL)
+        en_cours = (
+            db.query(Book)
+            .filter(Book.reading_progress > 0, Book.is_read == False)
+            .order_by(Book.reading_progress.desc())
+            .all()
+        )
+
+        # Wishlist = livres en PAL sans progression (pas encore commences)
+        pal_items = (
             db.query(ReadingListItem)
             .join(Book)
             .filter(Book.is_read == False)
             .order_by(ReadingListItem.position, ReadingListItem.added_at.desc())
             .all()
         )
-        return render_template("pal.html", request=request, items=items)
+        # Exclure les livres deja dans "en cours"
+        en_cours_ids = {b.id for b in en_cours}
+        wishlist = [i for i in pal_items if i.book.id not in en_cours_ids]
+
+        return render_template("pal.html", request=request,
+                               en_cours=en_cours, wishlist=wishlist)
     finally:
         db.close()
 
@@ -183,6 +204,12 @@ def update_progress(book_id):
         if book:
             book.reading_progress = max(0, min(100, progress))
             db.commit()
+        # Si appele depuis le hero (hx-target=#hero-pct), retourner juste le %
+        if request.headers.get("HX-Target") == "hero-pct":
+            return f'{book.reading_progress}%'
+        # Si appele depuis la PAL, retourner le label
+        if "pal-progress" in (request.headers.get("HX-Target") or ""):
+            return f'{book.reading_progress}%'
         return render_template("partials/progress.html", request=request, book=book)
     finally:
         db.close()
@@ -267,6 +294,7 @@ def reco_add_pal():
 
         db.add(ReadingListItem(book_id=book.id))
         db.commit()
+        _remove_from_reco_cache(title)
         return '<span class="card-action-feedback">Ajoute a la PAL</span>'
     finally:
         db.close()
@@ -310,6 +338,7 @@ def reco_mark_read():
             book.is_read = True
 
         db.commit()
+        _remove_from_reco_cache(title)
         return '<span class="card-action-feedback">Marque comme lu</span>'
     finally:
         db.close()
@@ -330,9 +359,26 @@ def reco_dislike():
             db.add(Dislike(title=title))
             db.commit()
 
-        return '<span class="card-action-feedback card-action-rejected">Retire des recos</span>'
+        _remove_from_reco_cache(title)
+        return ''  # HTMX outerHTML sur la carte parent = supprime visuellement
     finally:
         db.close()
+
+
+def _remove_from_reco_cache(title: str):
+    """Remove a book from the recommendation cache after user action."""
+    import json
+    cache_path = os.path.join(os.path.dirname(__file__), "data", "plook_cache.json")
+    try:
+        with open(cache_path) as f:
+            cache = json.load(f)
+        recos = cache.get("claude_recos", [])
+        title_lower = title.lower()
+        cache["claude_recos"] = [r for r in recos if r.get("title", "").lower() != title_lower]
+        with open(cache_path, "w") as f:
+            json.dump(cache, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
 
 
 # ==================== PAL actions (HTMX) ====================
@@ -438,8 +484,12 @@ def search_add():
             is_read=False,
         )
         db.add(book)
+        db.flush()
+
+        # Ajouter automatiquement a la PAL
+        db.add(ReadingListItem(book_id=book.id))
         db.commit()
-        return f'<div class="tag">"{title}" ajoute</div>'
+        return f'<div class="tag">"{title}" ajoute a la PAL</div>'
     finally:
         db.close()
 
