@@ -4,19 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Plook{% endblock %}</title>
-  <link rel="icon" type="image/png" sizes="64x64" href="/static/plook-favicon-64.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/static/plook-favicon-32.png">
-  <link rel="stylesheet" href="/static/plook-style.css">
+  <link rel="icon" type="image/png" sizes="64x64" href="{{ url_for('static', filename='plook-favicon-64.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='plook-favicon-32.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='plook-style.css') }}">
   <meta name="view-transition" content="same-origin">
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 </head>
 <body>
   <nav class="navbar" role="navigation" aria-label="navigation principale">
     <a href="/" class="logo" aria-label="Plook accueil">
-      <img src="/static/plook-logo-navbar.png" alt="Plook" class="logo-img" height="80">
+      <img src="{{ url_for('static', filename='plook-logo-navbar.png') }}" alt="Plook" class="logo-img" height="80">
     </a>
     <ul class="nav-links">
-      <li><a href="/" {% if request.path == "/plook" or request.path == "/" %}class="active"{% endif %}>accueil</a></li>
+      <li><a href="/" {% if request.path == "/" %}class="active"{% endif %}>accueil</a></li>
       <li><a href="/bibliotheque" {% if request.path == "/bibliotheque" %}class="active"{% endif %}>bibliotheque</a></li>
       <li><a href="/pal" {% if request.path == "/pal" %}class="active"{% endif %}>pile a lire</a></li>
       <li><a href="/auteurs" {% if request.path == "/auteurs" %}class="active"{% endif %}>auteurs</a></li>
@@ -29,7 +29,7 @@
 
   <footer class="site-footer">
     <div class="footer-content">
-      <img src="/static/plook-icone.png" alt="Plook" class="footer-icon" height="32">
+      <img src="{{ url_for('static', filename='plook-icone.png') }}" alt="Plook" class="footer-icon" height="32">
       <span class="footer-text">plook -- tes livres, tes coups de coeur</span>
     </div>
   </footer>
