@@ -6,6 +6,9 @@
   <title>{% block title %}Plook{% endblock %}</title>
   <link rel="icon" type="image/png" sizes="64x64" href="{{ url_for('static', filename='plook-favicon-64.png') }}">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='plook-favicon-32.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='plook-icone.png') }}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Plook">
   <link rel="stylesheet" href="{{ url_for('static', filename='plook-style.css') }}">
   <meta name="view-transition" content="same-origin">
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
